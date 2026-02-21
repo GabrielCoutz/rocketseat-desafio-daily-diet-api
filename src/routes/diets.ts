@@ -17,7 +17,10 @@ export const dietsRoutes = async (app: FastifyInstance) => {
       })
       .select('*')
 
-    return res.status(200).send({ diets: dietsList })
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const dietsListWithoutUserId = dietsList.map(({ userId, ...diet }) => diet)
+
+    return res.status(200).send({ diets: dietsListWithoutUserId })
   })
 
   app.get('/:id', async (req, res) => {
@@ -37,7 +40,11 @@ export const dietsRoutes = async (app: FastifyInstance) => {
       .first()
 
     if (!dietResponse) return res.status(404).send()
-    res.status(200).send({ diet: dietResponse })
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { userId, ...diet } = dietResponse
+
+    res.status(200).send({ diet })
   })
 
   app.post('/', async (req, res) => {
