@@ -8,7 +8,20 @@ export const dietsRoutes = async (app: FastifyInstance) => {
   app.get('/', async (_, res) => {
     const dietsList = await knex('diets').select('*')
 
-    return res.status(200).send({ dietsList })
+    return res.status(200).send({ diets: dietsList })
+  })
+
+  app.get('/:id', async (req, res) => {
+    const paramsSchema = z.object({
+      id: z.uuid(),
+    })
+
+    const { id: dietID } = paramsSchema.parse(req.params)
+
+    const dietResponse = await knex('diets').where('id', dietID).first()
+
+    if (!dietResponse) return res.status(404).send()
+    res.status(200).send({ diet: dietResponse })
   })
 
   app.post('/', async (req, res) => {
