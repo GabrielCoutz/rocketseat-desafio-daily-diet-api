@@ -101,4 +101,48 @@ export const dietsRoutes = async (app: FastifyInstance) => {
 
     res.status(204).send()
   })
+
+  app.get('/summary', async (req, res) => {
+    const sessionId = req.cookies?.sessionId
+
+    const totalResponse = await knex('diets').select('isOnDiet').where({
+      userId: sessionId,
+    })
+
+    const summary = totalResponse.reduce(
+      (acc, item) => {
+        const result = {
+          total: (acc.total += 1),
+          diet: {
+            inside: item?.isOnDiet ? (acc.diet.inside += 1) : acc.diet.inside,
+            outside: !item?.isOnDiet
+              ? (acc.diet.outside += 1)
+              : acc.diet.outside,
+          },
+        }
+
+        const percentageInsideDiet = Number(
+          (result.diet.inside > 0
+            ? (result.diet.inside / result.total) * 100
+            : 0
+          ).toFixed(2),
+        )
+
+        return {
+          ...result,
+          percentageInsideDiet,
+        }
+      },
+      {
+        total: 0,
+        percentageInsideDiet: 0,
+        diet: {
+          inside: 0,
+          outside: 0,
+        },
+      },
+    )
+
+    res.status(200).send(summary)
+  })
 }
