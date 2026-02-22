@@ -112,6 +112,8 @@ export const dietsRoutes = async (app: FastifyInstance) => {
     const summary = totalResponse.reduce(
       (acc, item) => {
         const result = {
+          bestSequenceInsideDiet: acc.bestSequenceInsideDiet,
+          currentSequence: acc.currentSequence,
           total: (acc.total += 1),
           diet: {
             inside: item?.isOnDiet ? (acc.diet.inside += 1) : acc.diet.inside,
@@ -121,6 +123,13 @@ export const dietsRoutes = async (app: FastifyInstance) => {
           },
         }
 
+        if (item?.isOnDiet) {
+          result.currentSequence++
+
+          if (result.currentSequence > result.bestSequenceInsideDiet)
+            result.bestSequenceInsideDiet = result.currentSequence
+        } else result.currentSequence = 0
+
         const percentageInsideDiet = Number(
           (result.diet.inside > 0
             ? (result.diet.inside / result.total) * 100
@@ -129,13 +138,15 @@ export const dietsRoutes = async (app: FastifyInstance) => {
         )
 
         return {
-          ...result,
           percentageInsideDiet,
+          ...result,
         }
       },
       {
         total: 0,
         percentageInsideDiet: 0,
+        bestSequenceInsideDiet: 0,
+        currentSequence: 0,
         diet: {
           inside: 0,
           outside: 0,
@@ -143,6 +154,9 @@ export const dietsRoutes = async (app: FastifyInstance) => {
       },
     )
 
-    res.status(200).send(summary)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { currentSequence, ...summaryResult } = summary
+
+    res.status(200).send(summaryResult)
   })
 }
